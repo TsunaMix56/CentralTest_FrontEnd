@@ -9,6 +9,18 @@ import {
   GET_USER_BY_ID,
 } from "../../lib/config";
 
+// Safe JSON parse to avoid 'Unexpected end of JSON input' on empty bodies
+async function safeJson<T>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    console.error("Failed to parse JSON", e, text);
+    throw e;
+  }
+}
+
 interface Property {
   id: number;
   title: string;
@@ -54,9 +66,9 @@ export default function PropertiesPage() {
     }
 
     fetch(`${API_BASE}${GET_PROPERTIES}`)
-      .then((res) => res.json())
+      .then((res) => safeJson<Property[]>(res))
       .then((data) => {
-        setProperties(data);
+        setProperties(data || []);
         setLoading(false);
       })
       .catch((error) => {
@@ -65,9 +77,9 @@ export default function PropertiesPage() {
       });
 
     fetch(`${API_BASE}${GET_FAVORITES}`)
-      .then((res) => res.json())
+      .then((res) => safeJson<Favorite[]>(res))
       .then((data) => {
-        setAllFavorites(data);
+        setAllFavorites(data || []);
       })
       .catch((error) => {
         console.error(error);
@@ -75,9 +87,9 @@ export default function PropertiesPage() {
 
     if (savedUserId) {
       fetch(`${API_BASE}${GET_USER_FAVORITES_PROPERTIES(savedUserId)}`)
-        .then((res) => res.json())
+        .then((res) => safeJson<Favorite[]>(res))
         .then((data) => {
-          setUserFavorites(data);
+          setUserFavorites(data || []);
         })
         .catch((error) => {
           console.error(error);
@@ -151,12 +163,12 @@ export default function PropertiesPage() {
         propertyId: propertyId,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => safeJson<any>(res)) // ignore body, may be empty
       .then(() => {
         fetch(`${API_BASE}${GET_FAVORITES}`)
-          .then((res) => res.json())
+          .then((res) => safeJson<Favorite[]>(res))
           .then((data) => {
-            setAllFavorites(data);
+            setAllFavorites(data || []);
             loadLikedByUsers(propertyId);
           });
       })

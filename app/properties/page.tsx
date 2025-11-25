@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../lib/config";
+import {
+  API_BASE,
+  GET_PROPERTIES,
+  GET_FAVORITES,
+  GET_USER_FAVORITES_PROPERTIES,
+  GET_USER_BY_ID,
+} from "../../lib/config";
 
 interface Property {
   id: number;
@@ -47,7 +53,7 @@ export default function PropertiesPage() {
       setUserId(savedUserId);
     }
 
-    fetch(`${API_BASE}/api/properties`)
+    fetch(`${API_BASE}${GET_PROPERTIES}`)
       .then((res) => res.json())
       .then((data) => {
         setProperties(data);
@@ -58,7 +64,7 @@ export default function PropertiesPage() {
         setLoading(false);
       });
 
-    fetch(`${API_BASE}/api/Favorites`)
+    fetch(`${API_BASE}${GET_FAVORITES}`)
       .then((res) => res.json())
       .then((data) => {
         setAllFavorites(data);
@@ -68,7 +74,7 @@ export default function PropertiesPage() {
       });
 
     if (savedUserId) {
-      fetch(`${API_BASE}/api/Favorites/user/${savedUserId}/properties`)
+      fetch(`${API_BASE}${GET_USER_FAVORITES_PROPERTIES(savedUserId)}`)
         .then((res) => res.json())
         .then((data) => {
           setUserFavorites(data);
@@ -103,7 +109,7 @@ export default function PropertiesPage() {
 
     for (const uid of userIds) {
       try {
-        const res = await fetch(`${API_BASE}/api/users/${uid}`);
+        const res = await fetch(`${API_BASE}${GET_USER_BY_ID(uid)}`);
         const user = await res.json();
         usernames.push(user.username);
       } catch (error) {
@@ -135,7 +141,7 @@ export default function PropertiesPage() {
   function handleLike(propertyId: number) {
     if (!userId) return;
 
-    fetch(`${API_BASE}/api/Favorites`, {
+    fetch(`${API_BASE}${GET_FAVORITES}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -147,7 +153,7 @@ export default function PropertiesPage() {
     })
       .then((res) => res.json())
       .then(() => {
-        fetch(`${API_BASE}/api/Favorites`)
+        fetch(`${API_BASE}${GET_FAVORITES}`)
           .then((res) => res.json())
           .then((data) => {
             setAllFavorites(data);

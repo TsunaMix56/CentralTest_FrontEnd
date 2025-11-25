@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE } from "../../lib/config";
+import { API_BASE, GET_USERS } from "../../lib/config";
 
 interface User {
   id: number;
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/users`)
+    fetch(`${API_BASE}${GET_USERS}`)
       .then((res) => res.json())
       .then((data) => {
         setUsers(data);

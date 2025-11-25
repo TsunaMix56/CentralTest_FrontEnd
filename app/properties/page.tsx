@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { API_BASE } from "../../lib/config";
 
 interface Property {
   id: number;
@@ -46,7 +47,7 @@ export default function PropertiesPage() {
       setUserId(savedUserId);
     }
 
-    fetch("http://localhost:5292/api/properties")
+    fetch(`${API_BASE}/api/properties`)
       .then((res) => res.json())
       .then((data) => {
         setProperties(data);
@@ -57,7 +58,7 @@ export default function PropertiesPage() {
         setLoading(false);
       });
 
-    fetch("http://localhost:5292/api/Favorites")
+    fetch(`${API_BASE}/api/Favorites`)
       .then((res) => res.json())
       .then((data) => {
         setAllFavorites(data);
@@ -67,7 +68,7 @@ export default function PropertiesPage() {
       });
 
     if (savedUserId) {
-      fetch(`http://localhost:5292/api/Favorites/user/${savedUserId}/properties`)
+      fetch(`${API_BASE}/api/Favorites/user/${savedUserId}/properties`)
         .then((res) => res.json())
         .then((data) => {
           setUserFavorites(data);
@@ -102,7 +103,7 @@ export default function PropertiesPage() {
 
     for (const uid of userIds) {
       try {
-        const res = await fetch(`http://localhost:5292/api/users/${uid}`);
+        const res = await fetch(`${API_BASE}/api/users/${uid}`);
         const user = await res.json();
         usernames.push(user.username);
       } catch (error) {
@@ -134,7 +135,7 @@ export default function PropertiesPage() {
   function handleLike(propertyId: number) {
     if (!userId) return;
 
-    fetch("http://localhost:5292/api/Favorites", {
+    fetch(`${API_BASE}/api/Favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,7 +147,7 @@ export default function PropertiesPage() {
     })
       .then((res) => res.json())
       .then(() => {
-        fetch("http://localhost:5292/api/Favorites")
+        fetch(`${API_BASE}/api/Favorites`)
           .then((res) => res.json())
           .then((data) => {
             setAllFavorites(data);

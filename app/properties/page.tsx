@@ -53,6 +53,7 @@ export default function PropertiesPage() {
   const [userFavorites, setUserFavorites] = useState<Favorite[]>([]);
   const [hoveredProperty, setHoveredProperty] = useState<number | null>(null);
   const [likedByUsers, setLikedByUsers] = useState<{ [key: number]: string[] }>({});
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
@@ -66,33 +67,55 @@ export default function PropertiesPage() {
     }
 
     fetch(`${API_BASE}${GET_PROPERTIES}`)
-      .then((res) => safeJson<Property[]>(res))
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return safeJson<Property[]>(res);
+      })
       .then((data) => {
         setProperties(data || []);
         setLoading(false);
       })
       .catch((error) => {
         console.error(error);
+        const errorMsg = error.message.includes("fetch")
+          ? "Cannot connect to API. Please check if the server is running."
+          : `Failed to load properties: ${error.message}`;
+        setError(errorMsg);
+        alert(errorMsg);
         setLoading(false);
       });
 
     fetch(`${API_BASE}${GET_FAVORITES}`)
-      .then((res) => safeJson<Favorite[]>(res))
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return safeJson<Favorite[]>(res);
+      })
       .then((data) => {
         setAllFavorites(data || []);
       })
       .catch((error) => {
         console.error(error);
+        alert(`Cannot load favorites: ${error.message}`);
       });
 
     if (savedUserId) {
       fetch(`${API_BASE}${GET_USER_FAVORITES_PROPERTIES(savedUserId)}`)
-        .then((res) => safeJson<Favorite[]>(res))
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return safeJson<Favorite[]>(res);
+        })
         .then((data) => {
           setUserFavorites(data || []);
         })
         .catch((error) => {
           console.error(error);
+          alert(`Cannot load your favorites: ${error.message}`);
         });
     }
   }, []);
@@ -122,10 +145,14 @@ export default function PropertiesPage() {
     for (const uid of userIds) {
       try {
         const res = await fetch(`${API_BASE}${GET_USER_BY_ID(uid)}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
         const user = await res.json();
         usernames.push(user.username);
       } catch (error) {
         console.error(error);
+        usernames.push("Unknown");
       }
     }
 
@@ -163,17 +190,32 @@ export default function PropertiesPage() {
         propertyId: propertyId,
       }),
     })
-      .then((res) => safeJson<any>(res)) // ignore body, may be empty
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return safeJson<any>(res);
+      })
       .then(() => {
         fetch(`${API_BASE}${GET_FAVORITES}`)
-          .then((res) => safeJson<Favorite[]>(res))
+          .then((res) => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            return safeJson<Favorite[]>(res);
+          })
           .then((data) => {
             setAllFavorites(data || []);
             loadLikedByUsers(propertyId);
+          })
+          .catch((error) => {
+            console.error(error);
+            alert(`Cannot refresh favorites: ${error.message}`);
           });
       })
       .catch((error) => {
         console.error(error);
+        alert(`Cannot like property: ${error.message}`);
       });
   }
 
@@ -181,6 +223,22 @@ export default function PropertiesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

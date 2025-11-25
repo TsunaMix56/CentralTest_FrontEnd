@@ -13,16 +13,28 @@ export default function LoginPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     fetch(`${API_BASE}${GET_USERS}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         setUsers(data);
         setLoading(false);
+        setError("");
       })
       .catch((error) => {
         console.error(error);
+        const errorMsg = error.message.includes("fetch")
+          ? "Cannot connect to API. Please check if the server is running."
+          : `API Error: ${error.message}`;
+        setError(errorMsg);
+        alert(errorMsg);
         setLoading(false);
       });
   }, []);
@@ -47,6 +59,16 @@ export default function LoginPage() {
         
         {loading ? (
           <p className="text-gray-600">Loading...</p>
+        ) : error ? (
+          <div className="text-red-600">
+            <p className="mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full p-3 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Retry
+            </button>
+          </div>
         ) : (
           <div>
             <select

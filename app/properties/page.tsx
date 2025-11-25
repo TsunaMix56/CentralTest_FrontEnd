@@ -59,6 +59,13 @@ export default function PropertiesPage() {
     const savedUsername = localStorage.getItem("username");
     const savedUserId = localStorage.getItem("userId");
     
+    // Redirect to login if not authenticated
+    if (!savedUserId || !savedUsername) {
+      alert("Please login first");
+      window.location.href = "/login";
+      return;
+    }
+    
     if (savedUsername) {
       setUsername(savedUsername);
     }
@@ -121,8 +128,21 @@ export default function PropertiesPage() {
   }, []);
 
   function handleLogout() {
+    // Clear localStorage
     localStorage.removeItem("userId");
     localStorage.removeItem("username");
+    
+    // Clear all state/cache
+    setUsername("");
+    setUserId("");
+    setProperties([]);
+    setAllFavorites([]);
+    setUserFavorites([]);
+    setLikedByUsers({});
+    setHoveredProperty(null);
+    setError("");
+    
+    // Redirect to login
     window.location.href = "/login";
   }
 
